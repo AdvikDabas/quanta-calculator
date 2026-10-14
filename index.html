@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Quanta — Scientific & Graphing Calculator</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/12.4.2/math.min.js"></script>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#0b0e17;--panel:#141927;--key:#1d2436;--key2:#262f47;--tx:#e8ecf8;--mut:#8089a6;--ac:#6d8bff;--ac2:#b06dff;--ok:#3ddc97;--bd:#2a3350}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){}}
+@media(prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#eef1f8;--panel:#fff;--key:#eef1fa;--key2:#dfe5f5;--tx:#1a2038;--mut:#6a7391;--ac:#4a6cf0;--ac2:#8b4ae0;--ok:#12a36a;--bd:#d3d9ea}}
+:root[data-theme="dark"]{--bg:#0b0e17;--panel:#141927;--key:#1d2436;--key2:#262f47;--tx:#e8ecf8;--mut:#8089a6;--ac:#6d8bff;--ac2:#b06dff;--ok:#3ddc97;--bd:#2a3350}
+:root[data-theme="light"]{--bg:#eef1f8;--panel:#fff;--key:#eef1fa;--key2:#dfe5f5;--tx:#1a2038;--mut:#6a7391;--ac:#4a6cf0;--ac2:#8b4ae0;--ok:#12a36a;--bd:#d3d9ea}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;min-height:100vh}
+.app{max-width:980px;margin:0 auto;padding:14px}
+header{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+h1{font-size:20px;margin:0;margin-right:auto;background:linear-gradient(90deg,var(--ac),var(--ac2));-webkit-background-clip:text;background-clip:text;color:transparent;letter-spacing:.5px}
+.pill{background:var(--panel);border:1px solid var(--bd);border-radius:99px;padding:6px 14px;color:var(--tx);cursor:pointer;font:inherit;font-size:13px}
+.pill.on{background:linear-gradient(90deg,var(--ac),var(--ac2));color:#fff;border-color:transparent}
+.tabs{display:flex;gap:6px}
+.card{background:var(--panel);border:1px solid var(--bd);border-radius:18px;padding:14px;box-shadow:0 10px 40px #0004}
+section{display:none}section.on{display:block}
+#hist{max-height:150px;overflow:auto;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;color:var(--mut)}
+#hist div{padding:3px 0;cursor:pointer;display:flex;justify-content:space-between;gap:10px}
+#hist div:hover{color:var(--tx)}
+#inp{width:100%;background:transparent;border:0;border-bottom:1px solid var(--bd);color:var(--tx);font:24px ui-monospace,Menlo,Consolas,monospace;padding:8px 0;outline:0}
+#inp:focus{border-color:var(--ac)}
+#res{text-align:right;font:600 30px ui-monospace,Menlo,Consolas,monospace;min-height:44px;padding:8px 0;overflow-x:auto;white-space:pre;color:var(--ok)}
+#res.err{color:#ff6b7a;font-size:15px}
+.grid{display:grid;gap:8px}
+.pad{grid-template-columns:repeat(5,1fr)}
+.main{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:12px}
+@media(max-width:720px){.main{grid-template-columns:1fr}}
+button.k{background:var(--key);color:var(--tx);border:1px solid var(--bd);border-radius:12px;padding:13px 0;font:inherit;font-size:16px;cursor:pointer;transition:.1s}
+button.k:hover{background:var(--key2)}button.k:active{transform:scale(.94)}
+button.k.op{color:var(--ac)}button.k.eq{background:linear-gradient(135deg,var(--ac),var(--ac2));color:#fff;border:0}
+button.k.red{color:#ff6b7a}
+.fn{grid-template-columns:repeat(auto-fill,minmax(66px,1fr));max-height:340px;overflow:auto;align-content:start}
+.fn button.k{padding:10px 0;font-size:13px}
+h3{margin:0 0 8px;font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--mut)}
+.row{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.row span{width:34px;height:12px;border-radius:6px;flex:none}
+input.t{width:100%;background:var(--key);border:1px solid var(--bd);border-radius:10px;color:var(--tx);padding:10px 12px;font:15px ui-monospace,Menlo,Consolas,monospace;outline:0}
+input.t:focus{border-color:var(--ac)}
+#cv{width:100%;height:min(62vh,520px);border-radius:14px;background:var(--bg);touch-action:none;cursor:crosshair;display:block;border:1px solid var(--bd)}
+#tr{font:13px ui-monospace,Menlo,Consolas,monospace;color:var(--mut);min-height:20px;margin-top:6px}
+.out{font:14px ui-monospace,Menlo,Consolas,monospace;white-space:pre-wrap;line-height:1.7;margin-top:10px;color:var(--ok)}
+.tip{color:var(--mut);font-size:12px;margin-top:8px;line-height:1.5}
+</style></head><body><div class="app">
+<header><h1>QUANTA ∑</h1>
+<button class="pill" id="deg">DEG</button><button class="pill" id="th">◐</button>
+<div class="tabs"><button class="pill on" data-t="c">Calculate</button><button class="pill" data-t="g">Graph</button><button class="pill" data-t="k">Calculus</button></div></header>
+
+<section id="c" class="on"><div class="card">
+<div id="hist"></div>
+<input id="inp" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Type e.g. sin(30), det([[1,2],[3,4]]), 5 km to miles">
+<div id="res">0</div></div>
+<div class="main">
+<div class="card"><h3>Keypad</h3><div class="grid pad" id="pad"></div></div>
+<div class="card"><h3>Functions · matrices · stats · complex · units</h3><div class="grid fn" id="fn"></div>
+<div class="tip">Supports variables (a=5), functions (f(x)=x^2+1), matrices, complex numbers (sqrt(-4), (2+3i)*i), units, and more. Use <b>ans</b> for the last result.</div></div></div></section>
+
+<section id="g"><div class="card"><div id="rows"></div>
+<canvas id="cv"></canvas><div id="tr">Drag to pan · scroll or pinch buttons to zoom · hover to trace</div>
+<div class="row" style="margin-top:8px"><button class="pill" id="zi">＋ Zoom</button><button class="pill" id="zo">－ Zoom</button><button class="pill" id="rs">Reset</button></div>
+<div class="tip">Plot y = f(x). Use any function: sin(x), x^3-2x, abs(x), sqrt(x), log(x), 1/x…</div></div></section>
+
+<section id="k"><div class="card"><h3>Calculus & numerical tools</h3>
+<div class="row"><input class="t" id="cf" value="x^3 - 6x^2 + 11x - 6" placeholder="f(x)"></div>
+<div class="row"><input class="t" id="ca" placeholder="a (lower / point)" value="0"><input class="t" id="cb" placeholder="b (upper)" value="4"></div>
+<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(130px,1fr))">
+<button class="k" data-a="d">d/dx f(x)</button><button class="k" data-a="i">∫ₐᵇ f(x)dx</button>
+<button class="k" data-a="r">Root near a</button><button class="k" data-a="l">lim x→a</button>
+<button class="k" data-a="v">f(a), f′(a)</button><button class="k" data-a="m">Min/Max on [a,b]</button></div>
+<div class="out" id="co">Pick a tool above.</div>
+<div class="tip">Angles follow the DEG/RAD switch. Derivative is symbolic (math.js); integral uses Simpson's rule; root uses Newton's method; limit approaches from both sides.</div></div></section>
+</div>
+<script>
+const $=s=>document.querySelector(s),vars={},TR=['sin','cos','tan','sec','csc','cot'],IT=['asin','acos','atan'];
+let deg=true,ans=0;
+function prep(){vars.ans=ans;for(const f of TR){if(deg)vars[f]=x=>typeof x==='number'?math[f](x*Math.PI/180):math[f](x);else delete vars[f]}
+for(const f of IT){if(deg)vars[f]=x=>{const r=math[f](x);return typeof r==='number'?r*180/Math.PI:r};else delete vars[f]}}
+const fix=s=>s.replace(/×/g,'*').replace(/÷/g,'/').replace(/π/g,'pi').replace(/√/g,'sqrt').replace(/−/g,'-');
+const fmt=r=>math.format(r,{precision:14});
+function ev(s,extra){prep();const sc=Object.assign({},vars,extra||{});return math.evaluate(fix(s),sc)}
+// tabs & theme
+document.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-t]').forEach(x=>x.classList.toggle('on',x===b));document.querySelectorAll('section').forEach(s=>s.classList.toggle('on',s.id===b.dataset.t));if(b.dataset.t==='g')draw()});
+$('#deg').onclick=e=>{deg=!deg;e.target.textContent=deg?'DEG':'RAD';e.target.classList.toggle('on',!deg);draw()};
+$('#th').onclick=()=>{const r=document.documentElement,d=r.dataset.theme?r.dataset.theme==='dark':!matchMedia('(prefers-color-scheme: light)').matches;r.dataset.theme=d?'light':'dark';draw()};
+// calculator
+const inp=$('#inp'),res=$('#res'),hist=$('#hist');
+function put(t){const a=inp.selectionStart??inp.value.length,b=inp.selectionEnd??a;inp.value=inp.value.slice(0,a)+t+inp.value.slice(b);const p=a+t.length;inp.focus();inp.setSelectionRange(p,p)}
+function calc(){const s=inp.value.trim();if(!s)return;try{let r=ev(s);if(r&&Array.isArray(r.entries))r=r.entries[r.entries.length-1];if(r===undefined||typeof r==='function'&&!r.syntax)throw 0;
+const t=typeof r==='function'?'function defined':fmt(r);if(typeof r!=='function'&&!(r&&r.isResultSet))ans=r;res.className='';res.textContent=t;
+const d=document.createElement('div');d.innerHTML='<span></span><b></b>';d.children[0].textContent=s;d.children[1].textContent='= '+t;d.onclick=()=>{inp.value=s;inp.focus()};hist.appendChild(d);hist.scrollTop=1e9}
+catch(e){res.className='err';res.textContent=e&&e.message?e.message:'Invalid expression'}}
+inp.addEventListener('keydown',e=>{if(e.key==='Enter')calc()});
+const pad=[['7'],['8'],['9'],['(',,'op'],[')',,'op'],['4'],['5'],['6'],['×','*','op'],['÷','/','op'],['1'],['2'],['3'],['+','+','op'],['−','-','op'],['0'],['.'],['ans'],['⌫','','red'],['=','','eq']];
+pad.forEach(([l,v,c])=>{const b=document.createElement('button');b.className='k '+(c||'');b.textContent=l;b.onclick=()=>{if(l==='⌫'){const a=inp.selectionStart;if(a>0){inp.value=inp.value.slice(0,a-1)+inp.value.slice(a);inp.setSelectionRange(a-1,a-1)}inp.focus()}else if(l==='=')calc();else put(v??l)};$('#pad').appendChild(b)});
+const ac=document.createElement('button');ac.className='k red';ac.textContent='AC';ac.style.gridColumn='span 5';ac.onclick=()=>{inp.value='';res.textContent='0';res.className='';hist.innerHTML=''};$('#pad').appendChild(ac);
+const fns='sin( cos( tan( asin( acos( atan( sinh( cosh( tanh( log( log10( log2( sqrt( cbrt( abs( exp( ^ ^2 ! π e i phi nCr:combinations( nPr:permutations( gcd( lcm( mod( round( floor( ceil( random() det( inv( transpose( [[1,2],[3,4]] eigs( cross( dot( mean( median( std( variance( max( min( sum( prod( re( im( arg( conj( derivative( simplify( rationalize( sign( fraction( bin: hex: 5\u00a0cm\u00a0to\u00a0inch :='.split(' ');
+[['sin(','sin'],['cos(','cos'],['tan(','tan'],['asin(','sin⁻¹'],['acos(','cos⁻¹'],['atan(','tan⁻¹'],['sinh(','sinh'],['cosh(','cosh'],['tanh(','tanh'],['log(','ln'],['log10(','log'],['log2(','log₂'],['sqrt(','√'],['cbrt(','∛'],['abs(','|x|'],['exp(','eˣ'],['^','xʸ'],['^2','x²'],['!','n!'],['pi','π'],['e','e'],['i','i'],['phi','φ'],['combinations(','nCr'],['permutations(','nPr'],['gcd(','gcd'],['lcm(','lcm'],['mod(','mod'],['round(','round'],['floor(','⌊x⌋'],['ceil(','⌈x⌉'],['random()','rand'],['det(','det'],['inv(','inv'],['transpose(','Aᵀ'],['[[1,2],[3,4]]','[ ]'],['eigs(','eig'],['cross(','cross'],['dot(','dot'],['mean(','mean'],['median(','med'],['std(','σ'],['variance(','var'],['max(','max'],['min(','min'],['sum(','Σ'],['prod(','Π'],['re(','Re'],['im(','Im'],['arg(','arg'],['conj(','conj'],['derivative(','d/dx'],['simplify(','simplify'],['rationalize(','rationalize'],['sign(','sign'],['fraction(','→ a/b'],[' to ','to units'],[' to hex','hex'],[' to bin','bin'],['5 km to miles','km→mi'],['f(x)=','f(x)='],['a=','a='],[',',','],['!=','≠'],['<','<'],['>','>'],['==','==']].forEach(([v,l])=>{const b=document.createElement('button');b.className='k';b.textContent=l;b.onclick=()=>put(v);$('#fn').appendChild(b)});
+// graph
+const cols=['#6d8bff','#ff6b8b','#3ddc97','#ffb454'],defs=['sin(x)','x^2/4-2','','' ],rows=$('#rows'),cv=$('#cv'),cx=cv.getContext('2d');
+const gi=cols.map((c,i)=>{const r=document.createElement('div');r.className='row';r.innerHTML=`<span style="background:${c}"></span><input class="t" placeholder="y${i+1} = f(x)" value="${defs[i]}">`;rows.appendChild(r);const el=r.querySelector('input');el.oninput=draw;return el});
+const V={x:0,y:0,s:50};let hov=null;
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+function nice(p){const r=p/V.s,m=Math.pow(10,Math.floor(Math.log10(r))),n=r/m;return(n<1.5?1:n<3.5?2:n<7.5?5:10)*m}
+function draw(){const dpr=devicePixelRatio||1,W=cv.clientWidth,H=cv.clientHeight;if(!W)return;cv.width=W*dpr;cv.height=H*dpr;cx.setTransform(dpr,0,0,dpr,0,0);
+const X=x=>W/2+(x-V.x)*V.s,Y=y=>H/2-(y-V.y)*V.s;cx.clearRect(0,0,W,H);cx.font='11px system-ui';
+const st=nice(70),x0=Math.floor((V.x-W/2/V.s)/st)*st,y0=Math.floor((V.y-H/2/V.s)/st)*st;cx.lineWidth=1;
+for(let x=x0;x<V.x+W/2/V.s+st;x+=st){cx.strokeStyle=css('--bd');cx.beginPath();cx.moveTo(X(x),0);cx.lineTo(X(x),H);cx.stroke();cx.fillStyle=css('--mut');if(Math.abs(x)>st/2)cx.fillText(+x.toPrecision(6),X(x)+3,Math.min(H-4,Math.max(12,Y(0)+12)))}
+for(let y=y0;y<V.y+H/2/V.s+st;y+=st){cx.strokeStyle=css('--bd');cx.beginPath();cx.moveTo(0,Y(y));cx.lineTo(W,Y(y));cx.stroke();cx.fillStyle=css('--mut');if(Math.abs(y)>st/2)cx.fillText(+y.toPrecision(6),Math.min(W-34,Math.max(4,X(0)+4)),Y(y)-3)}
+cx.strokeStyle=css('--mut');cx.lineWidth=1.6;cx.beginPath();cx.moveTo(X(0),0);cx.lineTo(X(0),H);cx.moveTo(0,Y(0));cx.lineTo(W,Y(0));cx.stroke();
+prep();gi.forEach((el,i)=>{el.fn=null;if(!el.value.trim())return;let c;try{c=math.compile(fix(el.value))}catch(e){return}const sc=Object.assign({},vars);el.fn=x=>{sc.x=x;try{const v=c.evaluate(sc);return typeof v==='number'?v:NaN}catch(e){return NaN}};
+cx.strokeStyle=cols[i];cx.lineWidth=2.2;cx.beginPath();let pen=false,py=0;for(let px=0;px<=W;px+=1){const y=el.fn(V.x+(px-W/2)/V.s),sy=Y(y);if(!isFinite(y)||Math.abs(sy)>1e5){pen=false;continue}if(pen&&Math.abs(sy-py)<H*1.5)cx.lineTo(px,sy);else cx.moveTo(px,sy);pen=true;py=sy}cx.stroke()});
+if(hov!=null){const x=V.x+(hov-W/2)/V.s;let t='x = '+x.toPrecision(5);gi.forEach((el,i)=>{if(el.fn){const y=el.fn(x);if(isFinite(y)){t+='   y'+(i+1)+' = '+y.toPrecision(5);cx.fillStyle=cols[i];cx.beginPath();cx.arc(hov,Y(y),5,0,7);cx.fill()}}});$('#tr').textContent=t}}
+let drag=null;cv.onpointerdown=e=>{cv.setPointerCapture(e.pointerId);drag={x:e.clientX,y:e.clientY,vx:V.x,vy:V.y}};cv.onpointerup=()=>drag=null;
+cv.onpointermove=e=>{const r=cv.getBoundingClientRect();hov=e.clientX-r.left;if(drag){V.x=drag.vx-(e.clientX-drag.x)/V.s;V.y=drag.vy+(e.clientY-drag.y)/V.s}draw()};
+cv.onwheel=e=>{e.preventDefault();zoom(e.deltaY<0?1.15:1/1.15)};
+function zoom(f){V.s=Math.min(1e6,Math.max(1e-3,V.s*f));draw()}$('#zi').onclick=()=>zoom(1.4);$('#zo').onclick=()=>zoom(1/1.4);$('#rs').onclick=()=>{V.x=V.y=0;V.s=50;draw()};
+addEventListener('resize',draw);
+// calculus
+const F=(s,x)=>{const v=ev(s,{x});if(typeof v!=='number')throw new Error('f(x) must be real here');return v};
+document.querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>{const f=$('#cf').value,o=$('#co');try{const a=ev($('#ca').value||'0'),bb=ev($('#cb').value||'1'),g=x=>F(f,x),k=b.dataset.a;let t='';
+if(k==='d'){const d=math.derivative(fix(f),'x');t="f′(x) = "+d.toString()+"\nsimplified: "+math.simplify(d).toString()+"\nf″(x) = "+math.simplify(math.derivative(d,'x')).toString()}
+if(k==='i'){const n=4000,h=(bb-a)/n;let s=g(a)+g(bb);for(let i=1;i<n;i++)s+=g(a+i*h)*(i%2?4:2);t='∫ from '+a+' to '+bb+' ≈ '+fmt(s*h/3)}
+if(k==='r'){let x=a,ok=false;for(let i=0;i<100;i++){const h=1e-6,d=(g(x+h)-g(x-h))/(2*h);if(!d)break;const nx=x-g(x)/d;if(Math.abs(nx-x)<1e-13){x=nx;ok=true;break}x=nx}t=ok||Math.abs(g(x))<1e-8?'root ≈ '+fmt(x)+'\nf(root) ≈ '+g(x).toExponential(2):'No convergence — try another start (a).'}
+if(k==='l'){const e=1e-7;t='from left : '+fmt(g(a-e))+'\nfrom right: '+fmt(g(a+e))+'\nlimit ≈ '+(Math.abs(g(a-e)-g(a+e))<1e-4?fmt(+((g(a-e)+g(a+e))/2).toPrecision(8)):'does not exist (sides differ)')}
+if(k==='v'){const h=1e-6;t='f('+a+') = '+fmt(g(a))+'\nf′('+a+') ≈ '+fmt(+((g(a+h)-g(a-h))/(2*h)).toPrecision(8))}
+if(k==='m'){let mn=[Infinity],mx=[-Infinity];for(let i=0;i<=20000;i++){const x=a+(bb-a)*i/20000,y=g(x);if(isFinite(y)){if(y<mn[0])mn=[y,x];if(y>mx[0])mx=[y,x]}}t='min ≈ '+fmt(+mn[0].toPrecision(8))+' at x ≈ '+fmt(+mn[1].toPrecision(6))+'\nmax ≈ '+fmt(+mx[0].toPrecision(8))+' at x ≈ '+fmt(+mx[1].toPrecision(6))}
+o.style.color='';o.textContent=t}catch(e){o.style.color='#ff6b7a';o.textContent=e.message||'Error'}});
+inp.focus();
+</script></body></html>
